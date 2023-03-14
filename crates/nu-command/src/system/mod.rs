@@ -13,6 +13,7 @@ mod ps;
 mod registry_query;
 mod run_external;
 mod sys;
+mod top;
 mod which_;
 
 pub use complete::Complete;
