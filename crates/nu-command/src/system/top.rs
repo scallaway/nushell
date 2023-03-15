@@ -3,6 +3,7 @@ use nu_protocol::{
     engine::{Command, EngineState, Stack},
     IntoPipelineData, PipelineData, ShellError, Signature, Value,
 };
+use sysinfo::SystemExt;
 
 #[derive(Clone)]
 pub struct Top;
@@ -32,10 +33,15 @@ impl Command for Top {
 }
 
 fn run_top(call: &Call) -> Result<PipelineData, ShellError> {
+    // Eventually this will have to be refreshed
+    let system = sysinfo::System::new_all();
+    let processes_count = system.processes().values().len();
+
     let pipeline_data = Value::String {
-        val: "Called from top".to_string(),
+        val: format!("Total processes: {:?}", processes_count).to_string(),
         span: call.span(),
     };
 
+    // Will need to stream this data to the terminal if possible
     Ok(pipeline_data.into_pipeline_data())
 }
