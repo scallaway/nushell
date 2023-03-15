@@ -31,4 +31,5 @@ pub use ps::Ps;
 pub use registry_query::RegistryQuery;
 pub use run_external::{External, ExternalCommand};
 pub use sys::Sys;
+pub use top::Top;
 pub use which_::Which;

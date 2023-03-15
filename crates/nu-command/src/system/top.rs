@@ -1,7 +1,7 @@
 use nu_protocol::{
     ast::Call,
     engine::{Command, EngineState, Stack},
-    PipelineData, ShellError, Signature,
+    IntoPipelineData, PipelineData, ShellError, Signature, Value,
 };
 
 #[derive(Clone)]
@@ -22,18 +22,20 @@ impl Command for Top {
 
     fn run(
         &self,
-        engine_state: &EngineState,
+        _engine_state: &EngineState,
         _stack: &mut Stack,
         call: &Call,
         _input: PipelineData,
     ) -> Result<PipelineData, ShellError> {
-        run_top(engine_state)
+        run_top(call)
     }
 }
 
-fn run_top(engine_state: &EngineState) -> Result<PipelineData, ShellError> {
-    Ok("Called from top"
-        .bytes()
-        .into_iter()
-        .into_pipeline_data(engine_state.ctrlc.clone()))
+fn run_top(call: &Call) -> Result<PipelineData, ShellError> {
+    let pipeline_data = Value::String {
+        val: "Called from top".to_string(),
+        span: call.span(),
+    };
+
+    Ok(pipeline_data.into_pipeline_data())
 }
