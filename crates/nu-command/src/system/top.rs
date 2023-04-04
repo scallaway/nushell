@@ -3,7 +3,7 @@ use nu_protocol::{
     engine::{Command, EngineState, Stack},
     IntoPipelineData, PipelineData, ShellError, Signature, Value,
 };
-use sysinfo::SystemExt;
+use sysinfo::{Process, ProcessExt, SystemExt};
 
 #[derive(Clone)]
 pub struct Top;
@@ -35,11 +35,34 @@ impl Command for Top {
 fn run_top(call: &Call) -> Result<PipelineData, ShellError> {
     // Eventually this will have to be refreshed
     let system = sysinfo::System::new_all();
-    let processes_count = system.processes().values().len();
+    let processes = system.processes();
+    let span = call.head;
 
-    let pipeline_data = Value::String {
-        val: format!("Total processes: {:?}", processes_count).to_string(),
-        span: call.span(),
+    // Order, by default, by CPU Usage
+    // Sorted unstably for performance (since this is updated in real time)
+    let _cpu_first_processes = processes
+        .values()
+        .collect::<Vec<&Process>>()
+        .sort_unstable_by(|p1, p2| p1.cpu_usage().partial_cmp(&p2.cpu_usage()).unwrap());
+
+    let columns = processes
+        .values()
+        .map(|process| process.name().to_string())
+        .collect::<Vec<String>>();
+
+    let values = processes
+        .values()
+        .map(|process| Value::String {
+            // val: process.tasks.values().map(|task| task.name()).join(","),
+            val: process.cpu_usage().to_string(),
+            span,
+        })
+        .collect();
+
+    let pipeline_data = Value::Record {
+        cols: columns,
+        vals: values,
+        span: call.head,
     };
 
     // Will need to stream this data to the terminal if possible
