@@ -3,7 +3,7 @@ use nu_protocol::{
     engine::{Command, EngineState, Stack},
     IntoPipelineData, PipelineData, ShellError, Signature, Value,
 };
-use sysinfo::{Process, ProcessExt, SystemExt};
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct Top;
@@ -33,10 +33,9 @@ impl Command for Top {
 }
 
 fn run_top(call: &Call) -> Result<PipelineData, ShellError> {
-    // Eventually this will have to be refreshed
-    let system = sysinfo::System::new_all();
-    let processes = system.processes();
-    let span = call.head;
+    // We just want the total process count here, so we don't need to wait long
+    // at all
+    let processes_count = nu_system::collect_proc(Duration::from_millis(1), false).len();
 
     // Order, by default, by CPU Usage
     // Sorted unstably for performance (since this is updated in real time)
